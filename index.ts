@@ -67,7 +67,10 @@ const machineConfig = talos.machine.getConfigurationOutput({
                 allowSchedulingOnControlPlanes: true,
                 apiServer: {
                     certSANs: [NODE_IP]
-                }
+                },
+                coreDNS: {
+                    image: 'registry.k8s.io/coredns/coredns:v1.14.7'
+                },
             }
         })),
         //
