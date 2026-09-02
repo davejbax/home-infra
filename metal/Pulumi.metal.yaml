@@ -1,4 +1,5 @@
 encryptionsalt: v1:WB6xmdowv54=:v1:xiyDUWOaKCRXDZMq:R29Md33lMWei3N98zo8gU8QxD6G7Hg==
 config:
-  home-infra:tailscale_auth_key:
-    secure: v1:e6krSITa8LsnTmpp:8uD2R2QqXVz/IlzfoHDda+KDDxL5nLQfy7G7hr2eDp3D02aaGLwXO5tCvga7Qf/VSCKddp5ZK9caIN7eawmfJkU1beJ6++vYT1Wne5HT
+  tailscale:oauthClientId: kuMQ9jPkz321CNTRL
+  tailscale:oauthClientSecret:
+    secure: v1:4IBh42Y36O3x3SOV:0otShXP5YangPLs0Rpp+e0qriRRYMNEivEUgxmeJBYk71R6c+yEWlOzfoxfRdLp3O5KKR+zfLfrWs0pNH/3+2XURS56y7YK/ZMJETmSsbMA=

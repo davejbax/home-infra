@@ -7,7 +7,9 @@ catalog:
   "@pulumi/pulumi": ^3.260.0
 
 # pnpm blocks postinstall scripts unless named. @pulumi/kubernetes' script
-# fetches the provider plugin binary; protobufjs' generates its runtime shims.
+# fetches its provider plugin binary; protobufjs' generates its runtime shims.
+# (@pulumi/tailscale needs no entry -- it has no install script, and Pulumi
+# resolves its plugin at preview time instead.)
 onlyBuiltDependencies:
   - "@pulumi/kubernetes"
   - protobufjs

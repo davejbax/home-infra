@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help image-url talosconfig kubeconfig kubeconfig-ts metal-up workloads-up
+.PHONY: help image-url new-authkey talosconfig kubeconfig kubeconfig-ts metal-up workloads-up
 
 # Both directories declare the same Pulumi project (home-infra), so the selected
 # stack is not a safe default -- every target names its stack explicitly.
@@ -15,6 +15,9 @@ help: ## Show this help
 image-url: ## Build the Talos disk image schematic and print its download URL
 	$(METAL) up --yes --target '**Schematic**'
 	$(METAL) stack output diskImageUrl
+
+new-authkey: ## Mint a fresh Tailscale auth key (needed before re-flashing the node)
+	$(METAL) up --replace '**TailnetKey**'
 
 metal-up: ## Apply the machine layer (needs access to the node's subnet)
 	$(METAL) up

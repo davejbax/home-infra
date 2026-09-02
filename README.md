@@ -1,3 +1,8 @@
+TODO:
+
+- deslopify (this README is terrible, and probably tear out every single comment that Claude wrote because they're all bad)
+- add some workloads
+
 # talos-pulumi
 
 Pulumi programs managing a single-node Talos Linux Kubernetes cluster on a
@@ -80,20 +85,52 @@ reachable on its tailnet address. Two things make that usable:
   your own tailnet before applying** -- it gets baked into the certificate.
 - `kubeconfigTailscale` is the stack output pointing at that name.
 
-CI joins the tailnet as an ephemeral node tagged `tag:ci`, which the ACL must
-allow to reach the node on 6443:
+### Policy file
+
+The tailnet policy file is *not* managed here -- `tailscale.Acl` owns the whole
+document and would overwrite console edits, which is a poor trade for one grant.
+Set it by hand in Access controls:
 
 ```json
-"tagOwners": { "tag:ci": ["autogroup:admin"] },
+"tagOwners": {
+  "tag:k8s": ["autogroup:admin"],
+  "tag:ci":  ["autogroup:admin"]
+},
 "grants": [
-  { "src": ["tag:ci"], "dst": ["lumbridge"], "ip": ["6443"] }
+  { "src": ["tag:ci"], "dst": ["tag:k8s"], "ip": ["6443"] }
 ]
 ```
 
+The node wears `tag:k8s` and CI joins as an ephemeral node tagged `tag:ci`.
+Both tags must exist in `tagOwners` before anything can wear them, so this is
+the first thing to set up.
+
+### Auth keys
+
+The node's auth key is a `tailscale.TailnetKey` in `metal/tailnet.ts`, not a
+pasted-in config value. Pulumi needs an OAuth client to mint it (Settings ->
+OAuth clients) with the `auth_keys` write scope and the tag `tag:k8s` -- a
+client can only mint keys carrying tags it owns:
+
+```sh
+pulumi -C metal --stack metal config set tailscale:oauthClientId <id>
+pulumi -C metal --stack metal config set tailscale:oauthClientSecret <secret> --secret
+```
+
+OAuth clients don't expire; API keys cap out at 90 days, which is why this isn't
+`tailscale:apiKey`.
+
+The key is single-use and is consumed the moment the node joins, so it is
+deliberately never regenerated -- otherwise every `pulumi up` would rewrite the
+machine config. Before re-flashing the node, mint a fresh one with
+`make new-authkey`.
+
+CI uses a second, separate OAuth client: `auth_keys` write scope, tag `tag:ci`,
+stored as the `TS_OAUTH_CLIENT_ID` / `TS_OAUTH_SECRET` repository secrets.
+
 Repository secrets the workflow needs: `R2_ACCESS_KEY_ID`,
 `R2_SECRET_ACCESS_KEY`, `PULUMI_CONFIG_PASSPHRASE`, `TS_OAUTH_CLIENT_ID`,
-`TS_OAUTH_SECRET`. The Tailscale OAuth client needs the `auth_keys` write scope
-and must own `tag:ci`.
+`TS_OAUTH_SECRET`.
 
 ## Upgrading
 

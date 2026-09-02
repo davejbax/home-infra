@@ -1,10 +1,8 @@
-import * as pulumi from "@pulumi/pulumi";
 import * as talos from "@pulumiverse/talos";
 import { stringify } from 'yaml';
 
 import { CLUSTER_NAME, TALOS_VERSION, HOSTNAME, NODE_IP, INSTALL_DISK, TAILSCALE_HOST } from "./config";
-
-const cfg = new pulumi.Config();
+import { nodeAuthKey } from "./tailnet";
 
 export const schematic = new talos.imagefactory.Schematic("schematic", {
     schematic: stringify({
@@ -33,7 +31,9 @@ export const images = talos.imagefactory.getUrlsOutput({
 
 export const secrets = new talos.machine.Secrets("secrets", { talosVersion: TALOS_VERSION });
 
-const tailscaleExtension = cfg.requireSecret('tailscale_auth_key').apply((key) => {
+// The provider marks `key` secret, and secretness carries through the apply,
+// so the machine config this ends up in stays encrypted in state.
+const tailscaleExtension = nodeAuthKey.key.apply((key) => {
     return stringify({
             apiVersion: 'v1alpha1',
             kind: 'ExtensionServiceConfig',
