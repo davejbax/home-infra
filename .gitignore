@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+bin/
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Generated cluster credentials -- never commit these
+talosconfig
+kubeconfig
+*.talosconfig
+*.kubeconfig
+
+# Pulumi
+Pulumi.*.yaml.bak

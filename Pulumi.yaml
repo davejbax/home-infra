@@ -1,0 +1,9 @@
+name: home-infra
+description: Talos Linux Kubernetes cluster on Raspberry Pi, with state in Cloudflare R2
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+    typescript: true
+backend:
+  url: "s3://pulumi-v0?endpoint=6c35de89970b70b91add1e96bc7e47b5.r2.cloudflarestorage.com&region=auto"

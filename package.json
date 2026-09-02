@@ -1,0 +1,24 @@
+{
+  "name": "home-infra",
+  "version": "1.0.0",
+  "description": "Pulumi-managed Talos Linux Kubernetes cluster on Raspberry Pi",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "private": "true",
+  "dependencies": {
+    "@pulumi/pulumi": "^3.260.0",
+    "@pulumiverse/talos": "^0.8.1",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "typescript": "^6.0.3"
+  },
+  "scripts": {
+    "image-url": "pulumi up --yes --target '**Schematic**' && pulumi stack output diskImageUrl",
+    "talosconfig": "pulumi stack output talosconfigRaw --show-secrets > talosconfig",
+    "kubeconfig": "pulumi stack output kubeconfigRaw --show-secrets > kubeconfig"
+  }
+}

@@ -1,0 +1,10 @@
+[tools]
+kubectl = "1.36.1"
+node = "24.1.0"
+pulumi = "3.260.0"
+# Provides the `talosctl` binary. Keep in step with `talosVersion` in the stack config.
+talos = "1.13.9"
+
+[env]
+# R2 credentials, backend URL and secrets passphrase. Gitignored; see .env.example.
+_.file = ".env"
