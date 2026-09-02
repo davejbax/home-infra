@@ -15,3 +15,7 @@ kubeconfig
 
 # Pulumi
 Pulumi.*.yaml.bak
+
+# Disk images -- built artifacts, several GB each
+*.img
+*.raw

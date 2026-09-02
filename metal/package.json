@@ -1,0 +1,12 @@
+{
+  "name": "metal",
+  "version": "1.0.0",
+  "description": "Talos Linux on the Raspberry Pi: image, machine config, bootstrap",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "@pulumi/pulumi": "catalog:",
+    "@pulumiverse/talos": "^0.8.1",
+    "yaml": "^2.9.0"
+  }
+}

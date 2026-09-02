@@ -2,15 +2,11 @@ import * as pulumi from "@pulumi/pulumi";
 import * as talos from "@pulumiverse/talos";
 import { stringify } from 'yaml';
 
-const CLUSTER_NAME = "homelab";
-const TALOS_VERSION = "v1.13.9";
-const HOSTNAME = "lumbridge";
-const NODE_IP = "192.168.1.99";
-const INSTALL_DISK = "/dev/sda";
+import { CLUSTER_NAME, TALOS_VERSION, HOSTNAME, NODE_IP, INSTALL_DISK, TAILSCALE_HOST } from "./config";
 
 const cfg = new pulumi.Config();
 
-const schematic = new talos.imagefactory.Schematic("schematic", {
+export const schematic = new talos.imagefactory.Schematic("schematic", {
     schematic: stringify({
         overlay: {
             image: 'siderolabs/sbc-raspberrypi',
@@ -28,14 +24,14 @@ const schematic = new talos.imagefactory.Schematic("schematic", {
     })
 });
 
-const images = talos.imagefactory.getUrlsOutput({
+export const images = talos.imagefactory.getUrlsOutput({
     talosVersion: TALOS_VERSION,
     schematicId: schematic.id,
     architecture: "arm64",
     sbc: "rpi_generic",
 });
 
-const secrets = new talos.machine.Secrets("secrets", { talosVersion: TALOS_VERSION });
+export const secrets = new talos.machine.Secrets("secrets", { talosVersion: TALOS_VERSION });
 
 const tailscaleExtension = cfg.requireSecret('tailscale_auth_key').apply((key) => {
     return stringify({
@@ -61,12 +57,12 @@ const machineConfig = talos.machine.getConfigurationOutput({
                     image: image,
                     disk: INSTALL_DISK,
                 },
-                certSANs: [NODE_IP],
+                certSANs: [NODE_IP, TAILSCALE_HOST],
             },
             cluster: {
                 allowSchedulingOnControlPlanes: true,
                 apiServer: {
-                    certSANs: [NODE_IP]
+                    certSANs: [NODE_IP, TAILSCALE_HOST]
                 },
                 coreDNS: {
                     image: 'registry.k8s.io/coredns/coredns:v1.14.7'
@@ -100,20 +96,15 @@ const bootstrap = new talos.machine.Bootstrap(
     { dependsOn: [configApply] },
 );
 
-const kubeconfig = new talos.cluster.Kubeconfig(
+export const kubeconfig = new talos.cluster.Kubeconfig(
     "kubeconfig",
     { clientConfiguration: secrets.clientConfiguration, node: NODE_IP },
     { dependsOn: [bootstrap] },
 );
 
-const talosconfig = talos.client.getConfigurationOutput({
+export const talosconfig = talos.client.getConfigurationOutput({
     clusterName: CLUSTER_NAME,
     clientConfiguration: secrets.clientConfiguration,
     endpoints: [NODE_IP],
     nodes: [NODE_IP],
 });
-
-export const diskImageUrl = images.urls.diskImage;
-export const installerImage = images.urls.installer;
-export const talosconfigRaw = pulumi.secret(talosconfig.talosConfig);
-export const kubeconfigRaw = pulumi.secret(kubeconfig.kubeconfigRaw);

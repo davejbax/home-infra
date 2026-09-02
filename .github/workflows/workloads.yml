@@ -1,0 +1,63 @@
+name: workloads
+
+on:
+  pull_request:
+    paths: [ "workloads/**", ".github/workflows/workloads.yml" ]
+  push:
+    branches: [ main ]
+    paths: [ "workloads/**", ".github/workflows/workloads.yml" ]
+  workflow_dispatch:
+
+# One update at a time. The DIY backend's locking is advisory, and cancelling a
+# running `up` is worse than queueing behind it.
+concurrency:
+  group: pulumi-home-infra-workloads
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_REGION: auto
+      PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+      PULUMI_SELF_MANAGED_STATE_LOCKING: "1"
+    steps:
+      - uses: actions/checkout@v5
+
+      # mise.toml loads .env, which is gitignored. Credentials come from the job
+      # environment here, so mise just needs the file to exist.
+      - run: touch .env
+      - uses: jdx/mise-action@v3
+
+      - uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          # Fail here, with a clear message, if the ACL or MagicDNS is wrong --
+          # rather than as an opaque Pulumi timeout several minutes later.
+          ping: lumbridge.swallow-banana.ts.net
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Preview
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+        uses: pulumi/actions@v6
+        with:
+          command: preview
+          stack-name: organization/home-infra/workloads
+          work-dir: workloads
+          comment-on-pr: true
+
+      # Gated on the event and the ref, deliberately not written as the `else`
+      # of the preview condition: a trigger added to `on:` later must fall
+      # through to nothing, never to an apply.
+      - name: Up
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: pulumi/actions@v6
+        with:
+          command: up
+          stack-name: organization/home-infra/workloads
+          work-dir: workloads

@@ -1,5 +1,10 @@
 .DEFAULT_GOAL := help
-.PHONY: help image-url talosconfig kubeconfig
+.PHONY: help image-url talosconfig kubeconfig kubeconfig-ts metal-up workloads-up
+
+# Both directories declare the same Pulumi project (home-infra), so the selected
+# stack is not a safe default -- every target names its stack explicitly.
+METAL     := pulumi -C metal --stack metal
+WORKLOADS := pulumi -C workloads --stack workloads
 
 help: ## Show this help
 	@echo "Usage: make <target>"
@@ -8,11 +13,20 @@ help: ## Show this help
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
 image-url: ## Build the Talos disk image schematic and print its download URL
-	pulumi up --yes --target '**Schematic**'
-	pulumi stack output diskImageUrl
+	$(METAL) up --yes --target '**Schematic**'
+	$(METAL) stack output diskImageUrl
+
+metal-up: ## Apply the machine layer (needs access to the node's subnet)
+	$(METAL) up
+
+workloads-up: ## Apply the Kubernetes layer (needs Tailscale)
+	$(WORKLOADS) up
 
 talosconfig: ## Write ./talosconfig from the stack output
-	pulumi stack output talosconfigRaw --show-secrets > talosconfig
+	$(METAL) stack output talosconfigRaw --show-secrets > talosconfig
 
-kubeconfig: ## Write ./kubeconfig from the stack output
-	pulumi stack output kubeconfigRaw --show-secrets > kubeconfig
+kubeconfig: ## Write ./kubeconfig, pointed at the node's LAN address
+	$(METAL) stack output kubeconfigRaw --show-secrets > kubeconfig
+
+kubeconfig-ts: ## Write ./kubeconfig, pointed at the node's Tailscale name
+	$(METAL) stack output kubeconfigTailscale --show-secrets > kubeconfig

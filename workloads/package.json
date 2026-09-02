@@ -1,0 +1,11 @@
+{
+  "name": "workloads",
+  "version": "1.0.0",
+  "description": "Kubernetes workloads running on the cluster",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "@pulumi/kubernetes": "^4.28.0",
+    "@pulumi/pulumi": "catalog:"
+  }
+}

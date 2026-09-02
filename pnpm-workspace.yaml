@@ -1,0 +1,13 @@
+packages:
+  - metal
+  - workloads
+
+# Versions used by more than one project live here, so they're declared once.
+catalog:
+  "@pulumi/pulumi": ^3.260.0
+
+# pnpm blocks postinstall scripts unless named. @pulumi/kubernetes' script
+# fetches the provider plugin binary; protobufjs' generates its runtime shims.
+onlyBuiltDependencies:
+  - "@pulumi/kubernetes"
+  - protobufjs
