@@ -120,17 +120,51 @@ pulumi -C metal --stack metal config set tailscale:oauthClientSecret <secret> --
 OAuth clients don't expire; API keys cap out at 90 days, which is why this isn't
 `tailscale:apiKey`.
 
-The key is single-use and is consumed the moment the node joins, so it is
-deliberately never regenerated -- otherwise every `pulumi up` would rewrite the
-machine config. Before re-flashing the node, mint a fresh one with
-`make new-authkey`.
+The key is reusable, so one key admits every node and re-flashing needs no new
+key. Tailscale caps auth key lifetime at 90 days with no way to opt out, so it
+does eventually expire; `recreateIfInvalid: "always"` lets Pulumi mint a
+replacement rather than leaving a dead key in the machine config. Pulumi only
+notices the expiry on a refresh, so if a node fails to join after a long gap,
+force it with `make new-authkey`.
 
-CI uses a second, separate OAuth client: `auth_keys` write scope, tag `tag:ci`,
-stored as the `TS_OAUTH_CLIENT_ID` / `TS_OAUTH_SECRET` repository secrets.
+CI uses a second, separate OAuth client: `auth_keys` write scope, tag `tag:ci`.
 
-Repository secrets the workflow needs: `R2_ACCESS_KEY_ID`,
-`R2_SECRET_ACCESS_KEY`, `PULUMI_CONFIG_PASSPHRASE`, `TS_OAUTH_CLIENT_ID`,
-`TS_OAUTH_SECRET`.
+## CI credentials
+
+`pulumi preview` runs `workloads/index.ts` -- it is arbitrary code execution,
+not a read-only operation. For a same-repo pull request GitHub runs the workflow
+file *from the PR's own branch*, so any gate written in the workflow can be
+edited away by the pull request it is meant to gate. The credentials are
+therefore held by GitHub environments, whose rules are enforced server-side.
+
+Two environments, each holding all five secrets:
+
+| Environment | Protection rule                    | Used by                        |
+| ----------- | ---------------------------------- | ------------------------------ |
+| `preview`   | required reviewer                  | pull requests, manual dispatch |
+| `deploy`    | deployment branches: `main` only   | pushes to `main`               |
+
+Secrets in both: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
+`PULUMI_CONFIG_PASSPHRASE`, `TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET`.
+
+**They must be environment secrets, not repository secrets.** Repository secrets
+are readable by any job, so a pull request could add one that declares no
+environment and read them straight out. Scoping them to an environment is the
+whole mechanism.
+
+Two things to know when setting this up:
+
+- Naming an environment in a workflow **auto-creates it with no protection
+  rules** if it doesn't exist. The YAML protects nothing by itself; create both
+  environments and their rules in Settings -> Environments first, or you get a
+  green build guarding nothing.
+- This needs the repository to be **public**. Environments exist on private
+  repos only with Pro/Team, and required reviewers on a private repo need
+  Enterprise. On public repos all of it is free.
+
+Also set Settings -> Actions -> *Require approval for all external
+contributors*. Fork pull requests get no secrets regardless, but this stops
+strangers spending your Actions minutes.
 
 ## Upgrading
 

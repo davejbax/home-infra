@@ -16,7 +16,7 @@ image-url: ## Build the Talos disk image schematic and print its download URL
 	$(METAL) up --yes --target '**Schematic**'
 	$(METAL) stack output diskImageUrl
 
-new-authkey: ## Mint a fresh Tailscale auth key (needed before re-flashing the node)
+new-authkey: ## Force-rotate the Tailscale auth key (if it expired and a node won't join)
 	$(METAL) up --replace '**TailnetKey**'
 
 metal-up: ## Apply the machine layer (needs access to the node's subnet)

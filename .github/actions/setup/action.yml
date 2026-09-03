@@ -1,0 +1,33 @@
+name: Set up Pulumi and the tailnet
+description: Toolchain, tailnet membership and workspace dependencies for a workloads run.
+
+# Composite actions can't read secrets, so the caller passes them in.
+inputs:
+  oauth-client-id:
+    description: Tailscale OAuth client ID, owning tag:ci
+    required: true
+  oauth-secret:
+    description: Tailscale OAuth client secret
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # mise.toml loads .env, which is gitignored. Credentials come from the job
+    # environment here, so mise just needs the file to exist.
+    - run: touch .env
+      shell: bash
+
+    - uses: jdx/mise-action@v3
+
+    - uses: tailscale/github-action@v4
+      with:
+        oauth-client-id: ${{ inputs.oauth-client-id }}
+        oauth-secret: ${{ inputs.oauth-secret }}
+        tags: tag:ci
+        # Fail here, with a clear message, if the ACL or MagicDNS is wrong --
+        # rather than as an opaque Pulumi timeout several minutes later.
+        ping: lumbridge.swallow-banana.ts.net
+
+    - run: pnpm install --frozen-lockfile
+      shell: bash
