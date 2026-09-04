@@ -6,8 +6,8 @@ inputs:
   oauth-client-id:
     description: Tailscale OAuth client ID, owning tag:ci
     required: true
-  oauth-secret:
-    description: Tailscale OAuth client secret
+  oauth-audience:
+    description: Tailscale OAuth audience
     required: true
 
 runs:
@@ -23,7 +23,7 @@ runs:
     - uses: tailscale/github-action@v4
       with:
         oauth-client-id: ${{ inputs.oauth-client-id }}
-        oauth-secret: ${{ inputs.oauth-secret }}
+        audience: ${{ inputs.oauth-audience }}
         tags: tag:ci
         # Fail here, with a clear message, if the ACL or MagicDNS is wrong --
         # rather than as an opaque Pulumi timeout several minutes later.

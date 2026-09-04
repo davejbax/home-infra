@@ -27,8 +27,8 @@ jobs:
     # human approves it, so no pull request executes with credentials unseen.
     environment: preview
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: auto
       PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
       PULUMI_SELF_MANAGED_STATE_LOCKING: "1"
@@ -37,7 +37,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          oauth-audience: ${{ secrets.TS_AUDIENCE }}
       - uses: pulumi/actions@v6
         with:
           command: preview
@@ -56,8 +56,8 @@ jobs:
     # itself -- GitHub refuses on the ref, before any step runs.
     environment: deploy
     env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: auto
       PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
       PULUMI_SELF_MANAGED_STATE_LOCKING: "1"
@@ -66,7 +66,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
-          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          oauth-audience: ${{ secrets.TS_AUDIENCE }}
       - uses: pulumi/actions@v6
         with:
           command: up
