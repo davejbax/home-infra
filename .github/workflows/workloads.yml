@@ -13,6 +13,9 @@ on:
       - ".github/workflows/workloads.yml"
       - ".github/actions/setup/action.yml"
 
+permissions:
+  id-token: write # This is required for the Tailscale action to request a JWT from GitHub
+
 # One update at a time. The DIY backend's locking is advisory, and cancelling a
 # running `up` is worse than queueing behind it.
 concurrency:
