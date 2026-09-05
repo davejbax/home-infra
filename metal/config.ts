@@ -1,5 +1,5 @@
 export const CLUSTER_NAME = "homelab";
-export const TALOS_VERSION = "v1.13.9";
+export const TALOS_VERSION = "v1.14.0";
 export const HOSTNAME = "lumbridge";
 export const NODE_IP = "192.168.1.99";
 export const INSTALL_DISK = "/dev/sda";
